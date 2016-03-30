@@ -1,5 +1,7 @@
 #include <curl/curl.h>
 #include <string.h>
+#include <libxml2/libxml/tree.h>
+#include <libxml2/libxml/parser.h>
 
 #define PEER_VERIFICATION
 #define HOST_VERIFICATION
