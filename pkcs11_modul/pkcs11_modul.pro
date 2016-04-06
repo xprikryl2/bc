@@ -7,4 +7,4 @@ SOURCES += main.c \
     module.c \
     commons.c
 
-LIBS += -lcurl
+LIBS += -lcurl -lxml2 -lcrypto -lssl

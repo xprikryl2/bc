@@ -14,6 +14,7 @@
 static struct remsig_token {
 
   char* access_token;
+  char* uco;
   int cryptoki_initialized;
 
   int open_sessions;
@@ -26,10 +27,12 @@ static struct remsig_token {
         CK_NOTIFY notify;
         CK_SLOT_ID slot;
         CK_ATTRIBUTE_PTR pTemplate;
+        CK_MECHANISM_PTR mechanism;
 
 
         int find_init_done;
         int sign_init_done;
+        long unsigned password;
 
   } sessions[MAX_NUM_SESSIONS];
 
@@ -108,6 +111,7 @@ CK_RV C_Initialize(CK_VOID_PTR a)
         remsig_token.sessions[i].notify = NULL;
         remsig_token.sessions[i].slot = -1;
         remsig_token.sessions[i].pTemplate = NULL;
+        remsig_token.sessions[i].password = 0;
     }
 
     remsig_token.login_user = -1;
@@ -764,15 +768,15 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
       return CKR_OPERATION_ACTIVE;
     }
 
+    state->password = hKey;
+    state->mechanism = pMechanism;
+
     state->sign_init_done = 1;
     return CKR_OK;
 }
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pulSignatureLen)
 {
-    CK_RV ret;
-    CK_BYTE_PTR buf;
-    int buflen;
     struct session_state *state;
 
     printf("Sign\n");
@@ -797,27 +801,26 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, 
       return CKR_OPERATION_NOT_INITIALIZED;
     }
 
-    if (pulSignatureLen == NULL) {
-    printf("pulSignatureLen NULL\n");
-    ret = CKR_ARGUMENTS_BAD;
-    }
-
     if (pData == NULL_PTR) {
-    printf("data NULL\n");
-    ret = CKR_ARGUMENTS_BAD;
+        printf("data NULL\n");
+        return CKR_ARGUMENTS_BAD;
     }
 
-    // volání API + parsování výsledku
+    if (ulDataLen == 0) {
+        printf("data NULL\n");
+        return CKR_ARGUMENTS_BAD;
+    }
+
+
+    char* buf = (char*)remsig_sign(remsig_token.access_token, 1, state->password, remsig_token.uco, (char*) pData);
 
     if (pSignature != NULL_PTR)
-    memcpy(pSignature, buf, buflen);
-    *pulSignatureLen = (CK_ULONG)buflen;
+    memcpy(pSignature, buf, strlen(buf));
+    *pulSignatureLen = (CK_ULONG) strlen(buf);
 
-    if (buf) {
-    memset(buf, 0, buflen);
     free(buf);
-    }
-    return ret;
+
+    return CKR_OK;
 }
 
 
