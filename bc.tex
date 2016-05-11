@@ -452,4 +452,111 @@ PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro
 
 	\end{enumerate}
 
+	\section{Úpravy systému RemSig}
+
+	RemSig v nynější podobě rozeznává dvě základní role. Role \textit{Signer} je určena pouze pro 		podepisování dat, zatímco role \textit{Manager} pouze pro správu systému. Implementace 			knihoven však využívá funkcionalitu obou rolí. Z tohoto důvodu bude vytvořena nová role, 			která bude obsahovat následující funkce:
+	\begin{itemize}
+		\item \textit{listMyCertificates} - vypíše certifikáty přihlášeného uživatele
+
+		\item \textit{checkPassword} - zkontroluje heslo k privátnímu klíči
+
+		\item \textit{sign} - vytvoří digitální podpis
+	\end{itemize}
+
+	Nová role bude určena přímo pro knihovny integrující RemSig do klientských aplikací. Jelikož 		je jako autentizační metoda těchto knihoven použit protokol OAuth a pro server je možné 			získat z přístupového tokenu edentitu uživatele, všem výše uvedeným metodám je odebrán 		parameter \textit{"uco"}, který sloužil k identifikaci uživatele.
+
+	\section{PKCS\#11 modul}
+	
+	V druhé části praktické práce jsem implementovat PKCS\#11 modul, který slouží k propojení 		systému RemSig a aplikací, které modul PKCS\#11 podporují. Mezi tyto aplikace patří například 	Mozilla Firefox, Safari, Mozilla Thunderbird, Evolution a mnoho dalších
+\footnote{Seznam podporovaných aplikací: \url{https://github.com/OpenSC/OpenSC/wiki/Using-smart-cards-with-applications}.}. 
+	Standard PKCS\#11 nepředpisuje, aby všechny jeho funkce byly implementovány, avšak 			definuje, které funkce by měli být implementovány, aby modul měl nějakou funkčnost. S ohledem 	na systém RemSig byl vytvořen profil PKCS\#11, který umožňuje práci s digitálním podpisem. 		Virtuální zařízení - token, je zobrazováno jako zařízení pouze pro čtení a tím pádem všechny 		funkce, které vytvářejí, upravují nebo mažou objekty nejsou podporovány. Každý aktivní token je 	již inicializován a uživatel má nastavené přihlašovací heslo. Aktivní token zároveň obsahuje 			právě jeden certifikát a jeden privátní klíč, k danému certifikátu.
+
+	\subsection{Obecné funkce} 
+	\textit{C\_Initialize} - inicializuje celý modul a vytvoří kontext klientské strany, který slouží k 		uchovávání informací o modulu. Tato funkce dále nastavuje logování a získává certifikáty z 			úložiště RemSig. Ke každému certifikátu obdrženému metodou \textit{listMyCertificates} je 			vytvořen virtuální token, který je posléze připojen do virtuálního slotu. 
+	\newline
+ 	\newline
+	\textit{C\_Finalize} - tato funkce je volána při ukončení práce s modulem. Slouží k uvolnění 			kontextu a k uzavření souboru logování.
+	\newline
+	\newline
+	\textit{C\_GetFunctionList} - obsahuje seznam všech implementovaných funkcí modulu.
+	\newline
+	\newline
+	\textit{C\_GetInfo} - poskytuje informace o modulu. Je zde uvedena použitá verze 				cryptoki a název, výrobce a verze modulu.
+
+	\subsection{Správa modulu} 
+
+	\textit{C\_GetSlotList} - slouží k získání seznamu dostupných slotů. Aplikace může 				určit, zda-li má být navrácen kompletní seznam nebo pouze seznam slotů, ve kterých je 			přítomen token.
+	\newline
+	\newline
+	\textit{C\_GetSlotInfo} - představuje základní informace o každém statickém slotu.
+	\newline
+	\newline
+	\textit{C\_GetTokenInfo} - slouží k získání informací o tokenu. Funkce nastaví tokenu 				hodnoty popis, seriové číslo a vydavatel podle certifikátu, který obsahuje. Dále každému 			tokenu nastaví následující vlastnosti:
+		\begin{itemize}
+		\item \textit{CKF\_WRITE\_PROTECTED} - token je pouze pro čtení.
+
+		\item \textit{CFK\_LOGIN\_REQUIRED} - uživatel musí být přihlášen pro přístup k 				některým objektům a funkcím.
+
+		\item \textit{CKF\_USER\_PIN\_INITIALIZED} - PIN uživatele je již nastaven, zabrání 				volání funkce \textit{C\_InitPin}.
+
+		\item \textit{CKF\_TOKEN\_INITIALIZED} - token je již inicializován, zabrání volání funkce 			\textit{C\_InitToken}.
+		\end{itemize}
+	\textit{C\_GetMechanismList} - funkce vrací seznam podporovaných kryptografických 				mechanismů tokenu. V seznamu se nyní nachází pouze jeden prvek a to 							\textit{CKM\_SHA256\_RSA\_PKCS}, který odpovídá základnímu mechanismu metody 			\textit{sign} používané systémem RemSig.
+	\newline
+	\newline
+	\textit{C\_GetMechanismInfo} - slouží k získání podrobných informací o mechanismu.
+
+	\subsection{Správa relací} 
+
+	\textit{C\_OpenSession} - vytvoří novou relaci mezi aplikací a tokenem. Jestliže má token již 		otevřenou existující relaci s aplikací, synchronizuje jejich stavy.
+	\newline
+	\newline
+	\textit{C\_CloseSession} - uzavře relaci a uvolní paměť.
+	\newline
+	\newline
+	\textit{C\_CloseAllSessions} - ukončí všechny relace a uvolní paměť, je volána před ukončením 	práce s modulem.
+	\newline
+	\newline
+	\textit{C\_GetSessionInfo} - poskytuje informace o relaci, její stav, ID slotu, ke kterému je 			vytvořena a další.
+	\newline
+	\newline
+	\textit{C\_Login} - autentizuje uživatele tokenu. Při úspěšném přihlášení, funkce nastaví 			uživateli příslušnou roli, čímž uživatel získá přístup k privátním objektům a funkcím. Všechny 		relace, které souvisí se stejným tokenem jsou následně aktualizovány do přihlášeného stavu. 		PIN je uložen do kontextu tokenu.
+	\newline
+	\newline
+	\textit{C\_Logout} - odhlásí uživatele a uvolní paměť. Všechny relace jsou aktualizovány do 		nepřihlášeného stavu.
+
+	\subsection{Práce s objekty a digitální podpis}
+
+	\textit{C\_FindObjectsInit} - inicializuje vyhledávání objektů, poskytnutá šablona je uložena do 	kontextu relace, která použila funkci.
+	\newline
+	\newline
+	\textit{C\_FindObjects} - zahájí samotné vyhledávání objektů. Každý token vlastní jeden 			certifikát a k němu jeden privátní klíč. Jestliže je objekt nalezen, funkce vrací identifikátor 			objektu.
+	\newline
+	\newline
+	\textit{C\_FindObjectsFinal} - ukončí operaci vyhledávání a uvolní šablonu z relačního 				kontextu.
+	\newline
+	\newline
+	\textit{C\_GetAttributeValue} - funkce slouží k získání atributu objektu, opět je poskytnuta 			šablona, která určuje, které atributy jsou požadovány. 
+	\newline
+	\newline
+	\textit{C\_SignInit} - autentizuje uživatele tokenu. Při úspěšném přihlášení, funkce nastaví 			uživateli příslušnou roli, čímž uživatel získá přístup k privátním objektům a funkcím. Všechny 		relace, které souvisí se stejným tokenem jsou následně aktualizovány do přihlášeného stavu.
+	\newline
+	\newline
+	\textit{C\_Sign} - odhlásí uživatele a uvolní paměť.
+
+	\subsection{Práce s modulem}
+	
+	Jestliže chce aplikace pracovat s modulem, pak musí pro jeho plnou funkčnost splnit sérii 			příkazů. Typickým příkladem práce aplikace s modulem je následující posloupnost:
+	\begin{enumerate}
+		\item Uživatel musí získat přístupový token pomocí OAuth aplikace. Jestliže token není k 			dispozici, modul se nepodaří inicializovat.
+		\item Aplikace inicializuje modul, který získá certifikáty ze systéme RemSig.
+		\item Poté si aplikace vylistuje dostupné tokeny a vybere si token, se kterým chce 				pracovat. Aplikace si může získat informace o tokenu a mechanismech, které podporuje.
+		\item Pro práci s tokenem si aplikace vytvoří jednu nebo více relací pomocí funkce 					\textit{C\_OpenSession}.
+		\item V tomto stavu je možné vyhledat veřejné objekty tokenu. Pro přístup k privátním 			objektům je zapotřebí se přihlásit pomocí funkce \textit{C\_Login}. PIN k tokenu je 				odeslán systému RemSig pro ověření správnosti. Po úspěšném přihlášení jsou 					aktualizovány všechny relace do přihlášeného stavu.
+		\item Aplikace inicializuje vyhledávání objektů pomocí funkce \textit{C\_FindObjectsInit}, 			přičemž funkci předá šablonu, která specifikuje hledaný objekt. 
+		\item Následuje samotné vyhledávání objektů. Funkce \textit{C\_FindObjects} získá 				identifikátory objektů, které se shodují s parametry šablony.
+		\item Vyhledávání je ukončeno zavoláním funkce \textit{C\_FindObjectsFinal}, paměť 				obsahující šablonu je uvolněna.
+		\item Aplikace vykoná kryptografické operace, v našem případě digitální podpis dat. Pro 			použití jeného tokenu není potřeba opět inicializovat modul, ale lze začít od kroku číslo 				3.
+		\item Při ukončení práce s modulem jsou zavolány funkce \textit{C\_CloseSessions} nebo 		\textit{C\_CloseAllSessions}, které ukončí relace mezi aplikací a tokenem a následně 				\textit{C\_Finalize}, který uvolní kontext modulu.
+	\end{enumerate}
 \end{document}
