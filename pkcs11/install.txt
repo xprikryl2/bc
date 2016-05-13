@@ -1,0 +1,3 @@
+// Vytvoření knihovny remsig.so
+gcc -lcrypto -lcurl -lxml2 -shared -o remsig.so -fPIC pkcs11.c
+

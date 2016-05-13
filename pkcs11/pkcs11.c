@@ -35,12 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <openssl/err.h>
-#include <openssl/evp.h>
 #include <openssl/pem.h>
-#include <openssl/rand.h>
-#include <openssl/x509.h>
 
 #ifdef __linux__
     #include <curl/curl.h>
@@ -59,6 +54,7 @@
 
 #include "ref/pkcs11u.h"
 #include "ref/pkcs11.h"
+#include "config.h"
 
 #define SIMULATE
 //#define PEER_VERIFICATION
@@ -424,7 +420,6 @@ curl_post_with_header(const char* url, const char* d_post, const char* header) {
 static void
 set_tokens(const char *xml)
 {
-
     xmlDoc *doc = NULL;
     xmlNode *root_element = NULL;
     int i = 0;
@@ -490,7 +485,6 @@ load_tokens()
 
     #endif
 
-    const char* list = "https://remsig.ics.muni.cz/remsig/listCertificates";
     const char* bearer = "Authorization: Bearer ";
     struct Response res = {0};
     char* header = NULL;
@@ -568,7 +562,6 @@ remsig_checkPassword(unsigned certID, char* password) {
 
     #endif
 
-    const char* sign = "https://remsig.ics.muni.cz/remsig/checkPassword";
     const char* bearer = "Authorization: Bearer ";
     struct Response res = {0};
     char* header = NULL;
@@ -637,7 +630,7 @@ remsig_checkPassword(unsigned certID, char* password) {
     xmlCleanupParser();
 
     // perform server request
-    res = curl_post_with_header(sign, (char*) xmlbuff, header);
+    res = curl_post_with_header(checkpass, (char*) xmlbuff, header);
 
     // checking response size
     if (res.size == 0 || res.data == NULL)
@@ -784,7 +777,6 @@ remsig_sign(unsigned certID, char* password, CK_BYTE* data, unsigned data_len) {
 
     #endif
 
-    const char* sign = "https://remsig.ics.muni.cz/remsig/sign";
     const char* bearer = "Authorization: Bearer ";
     struct Response res = {0};
     char* header = NULL;
@@ -1023,6 +1015,11 @@ C_Initialize(CK_VOID_PTR a)
 
     remsig_token.logfile = fopen(path, "a");
     if(remsig_token.logfile == NULL) {
+        return CKR_FUNCTION_FAILED;
+    }
+
+    if(NULL == getToken()) {
+        st_logf("Access token not found");
         return CKR_FUNCTION_FAILED;
     }
 
@@ -1768,7 +1765,7 @@ C_FindObjectsInit(CK_SESSION_HANDLE hSession,
 {
     struct session_state *state;
 
-    st_logf("FindObjectsInit with pTemplate : \n");
+    st_logf("FindObjectsInit: \n");
 
 
     if (remsig_token.cryptoki_initialized != 1)
@@ -1792,7 +1789,7 @@ C_FindObjectsInit(CK_SESSION_HANDLE hSession,
     }
 
     // Objects are searched by label, issuer, serial number or ID
-
+    /*
     for(unsigned i = 0; i < ulCount; i++) {
         if(pTemplate[i].type == CKA_CLASS) {
             if(*(unsigned*)(pTemplate[i].pValue) == CKO_CERTIFICATE) {
@@ -1853,7 +1850,7 @@ C_FindObjectsInit(CK_SESSION_HANDLE hSession,
             st_logf("looking for %x %u\n", pTemplate[i].type, pTemplate[i].pValue);
         }
     }
-
+    */
 
     // looking for objects, if the ulCount == 0, all objects are required
     if(ulCount != 0) {
@@ -1881,6 +1878,11 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
     CK_SLOT_ID slotID;
     int objects = 3;
     char* label = NULL;
+    ASN1_INTEGER* integer;
+    ASN1_PRINTABLESTRING* printableString;
+    unsigned char* der = NULL;
+    unsigned char* derNext = NULL;
+    unsigned length = 0;
 
     st_logf("FindObjects\n");
 
@@ -1921,7 +1923,7 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
         goto set;
     }
     else {
-
+        // searching objects according to the template
         for(int i = 0; i < state->template_count; i++) {
 
             switch(pTemplate[i].type) {
@@ -1958,10 +1960,34 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
                     }
                 break;
                 case CKA_SUBJECT:
-                    if(strcmp(remsig_token.tokens[i].DN, pTemplate[i].pValue) != 0) {
+
+                    //DER ENCODING
+                    printableString = malloc(sizeof(ASN1_PRINTABLESTRING));
+                    printableString->type = 19;
+                    printableString->flags = 0;
+                    printableString->length = strlen(remsig_token.tokens[slotID].DN);
+                    printableString->data = remsig_token.tokens[slotID].DN;
+
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(printableString);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, &derNext);
+
+                    if(memcmp(der, pTemplate[i].pValue, length) != 0) {
                         objects = 0;
+                        free(printableString);
+                        free(der);
                         goto set;
                     }
+                    free(der);
+                    free(printableString);
                 break;
                 case CKA_CLASS:
                     if(*(CK_ULONG*)pTemplate[i].pValue == CKO_CERTIFICATE) {
@@ -1976,6 +2002,10 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
                     }
                 break;
                 case CKA_TRUSTED:
+                    if (objects == 1) {
+                       objects = 0;
+                       goto set;
+                    }
                     objects = 2;
                     if(*(CK_BBOOL*)pTemplate[i].pValue != CK_TRUE) {
                         objects = 0;
@@ -1983,20 +2013,75 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
                     }
                 break;
                 case CKA_ISSUER:
+                    if (objects == 1) {
+                       objects = 0;
+                       goto set;
+                    }
                     objects = 2;
-                    // DER ENCODING
-                    if(strcmp(pTemplate[i].pValue, remsig_token.tokens[slotID].issuer) != 0) {
+
+                    //DER ENCODING
+                    printableString = malloc(sizeof(ASN1_PRINTABLESTRING));
+                    printableString->type = 19;
+                    printableString->flags = 0;
+                    printableString->length = strlen(remsig_token.tokens[slotID].issuer);
+                    printableString->data = remsig_token.tokens[slotID].issuer;
+
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(printableString);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, &derNext);
+
+                    if(memcmp(der, pTemplate[i].pValue, length) != 0) {
                         objects = 0;
+                        free(printableString);
+                        free(der);
                         goto set;
                     }
+                    free(der);
+                    free(printableString);
                 break;
                 case CKA_SERIAL_NUMBER:
+                    if (objects == 1) {
+                       objects = 0;
+                       goto set;
+                    }
                     objects = 2;
-                    // DER ENCODING
-                    if(strcmp(pTemplate[i].pValue, remsig_token.tokens[slotID].serial) != 0) {
+
+                    //DER ENCODING
+                    integer = malloc(sizeof(ASN1_INTEGER));
+                    integer->type = 2;
+                    integer->flags = 0;
+                    integer->length = strlen(remsig_token.tokens[slotID].serial);
+                    integer->data = remsig_token.tokens[slotID].serial;
+
+                    length = i2d_ASN1_INTEGER(integer, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(integer);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_INTEGER(integer, &derNext);
+
+
+                    if(memcmp(der, pTemplate[i].pValue, length) != 0) {
                         objects = 0;
+                        free(printableString);
+                        free(der);
                         goto set;
                     }
+                    free(der);
+                    free(printableString);
                 break;
                 case CKA_CERTIFICATE_TYPE:
                     if(*(CK_ULONG*)pTemplate[i].pValue == CKC_X_509) {
@@ -2109,6 +2194,7 @@ C_SignInit(CK_SESSION_HANDLE hSession,
     struct session_state *state;
 
     st_logf("SignInit\n");
+    // this function checks all the parameters
 
     if (remsig_token.cryptoki_initialized != 1)
     {
@@ -2130,6 +2216,7 @@ C_SignInit(CK_SESSION_HANDLE hSession,
       return CKR_OPERATION_ACTIVE;
     }
 
+    // object with id 0 is private key
     if(hKey != 0) {
         st_logf("Bad object for signing.\n");
         return CKR_KEY_HANDLE_INVALID;
@@ -2188,6 +2275,7 @@ C_Sign(CK_SESSION_HANDLE hSession,
 
     ID = state->slot;
 
+    // performs sign operation
     char* buf = (char*) remsig_sign(ID, remsig_token.tokens[ID].pin, pData, ulDataLen);
 
     if (pSignature != NULL_PTR && buf != NULL) {
@@ -2196,9 +2284,11 @@ C_Sign(CK_SESSION_HANDLE hSession,
     }
     else {
         st_logf("Error during signing.\n");
+        free(buf);
         return CKR_DEVICE_ERROR;
     }
 
+    free(buf);
     return CKR_OK;
 }
 
@@ -2213,6 +2303,11 @@ C_GetAttributeValue(CK_SESSION_HANDLE hSession,
     CK_SLOT_ID slotID;
     CK_ULONG err = CKR_OK;
     char* label = NULL;
+    ASN1_INTEGER* integer;
+    ASN1_PRINTABLESTRING* printableString;
+    unsigned char* der = NULL;
+    unsigned char* derNext = NULL;
+    unsigned length = 0;
 
     st_logf("GetAttributeValue - count %d\n", ulCount);
 
@@ -2431,19 +2526,40 @@ C_GetAttributeValue(CK_SESSION_HANDLE hSession,
 
                 case CKA_SUBJECT:
 
+                    //DER ENCODING
+                    printableString = malloc(sizeof(ASN1_PRINTABLESTRING));
+                    printableString->type = 19;
+                    printableString->flags = 0;
+                    printableString->length = strlen(remsig_token.tokens[slotID].DN);
+                    printableString->data = remsig_token.tokens[slotID].DN;
+
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(printableString);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, &derNext);
+
                     // DER ENCODING OF CERTIFICATE SUBJECT NAME
                     if(pTemplate[i].pValue == NULL) {
-                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[i].DN));
+                        pTemplate[i].ulValueLen = length;
                     }
                     else {
-                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[i].DN))) {
-                            memcpy(pTemplate[i].pValue, remsig_token.tokens[i].DN, strlen(remsig_token.tokens[i].DN));
+                        if(pTemplate[i].ulValueLen >= length) {
+                            memcpy(pTemplate[i].pValue, der, length);
                         }
                         else {
                             pTemplate[i].ulValueLen = -1;
-                            err = CKR_BUFFER_TOO_SMALL;
+                            err = CKR_BUFFER_TOO_SMALL;                         
                         }
                     }
+                    free(der);
+                    free(printableString);
 
                 break;
 
@@ -2807,19 +2923,40 @@ C_GetAttributeValue(CK_SESSION_HANDLE hSession,
 
                 case CKA_SUBJECT:
 
+                    //DER ENCODING
+                    printableString = malloc(sizeof(ASN1_PRINTABLESTRING));
+                    printableString->type = 19;
+                    printableString->flags = 0;
+                    printableString->length = strlen(remsig_token.tokens[slotID].DN);
+                    printableString->data = remsig_token.tokens[slotID].DN;
+
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(printableString);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, &derNext);
+
                     // DER ENCODING OF CERTIFICATE SUBJECT NAME
                     if(pTemplate[i].pValue == NULL) {
-                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[i].DN));
+                        pTemplate[i].ulValueLen = length;
                     }
                     else {
-                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[i].DN))) {
-                            memcpy(pTemplate[i].pValue, remsig_token.tokens[i].DN, strlen(remsig_token.tokens[i].DN));
+                        if(pTemplate[i].ulValueLen >= length) {
+                            memcpy(pTemplate[i].pValue, der, length);
                         }
                         else {
                             pTemplate[i].ulValueLen = -1;
                             err = CKR_BUFFER_TOO_SMALL;
                         }
                     }
+                    free(der);
+                    free(printableString);
 
                 break;
 
@@ -2842,49 +2979,88 @@ C_GetAttributeValue(CK_SESSION_HANDLE hSession,
 
                 case CKA_ISSUER:
 
-                    // DER ENCODING OF CERTIFICATE ISSUER
+                    //DER ENCODING
+                    printableString = malloc(sizeof(ASN1_PRINTABLESTRING));
+                    printableString->type = 19;
+                    printableString->flags = 0;
+                    printableString->length = strlen(remsig_token.tokens[slotID].issuer);
+                    printableString->data = remsig_token.tokens[slotID].issuer;
+
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(printableString);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_PRINTABLESTRING(printableString, &derNext);
+
                     if(pTemplate[i].pValue == NULL) {
-                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[i].issuer));
+                        pTemplate[i].ulValueLen = length;
                     }
                     else {
-                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[i].issuer))) {
-                            memcpy(pTemplate[i].pValue, remsig_token.tokens[i].issuer, strlen(remsig_token.tokens[i].issuer));
+                        if(pTemplate[i].ulValueLen >= length) {
+                            memcpy(pTemplate[i].pValue, der, length);
                         }
                         else {
                             pTemplate[i].ulValueLen = -1;
                             err = CKR_BUFFER_TOO_SMALL;
                         }
                     }
+                    free(der);
+                    free(printableString);
 
                 break;
 
                 case CKA_SERIAL_NUMBER:
 
-                    // DER ENCODING OF SERIAL NUMBER
+                    //DER ENCODING
+                    integer = malloc(sizeof(ASN1_INTEGER));
+                    integer->type = 2;
+                    integer->flags = 0;
+                    integer->length = strlen(remsig_token.tokens[slotID].serial);
+                    integer->data = remsig_token.tokens[slotID].serial;
+
+                    length = i2d_ASN1_INTEGER(integer, NULL);
+
+                    der = malloc(length);
+                    if (!der) {
+                        printf("Cannot alloc memory - size_t %d.\n", length);
+                        free(integer);
+                        return CKR_DEVICE_ERROR;
+                    }
+
+                    derNext = der;
+                    length = i2d_ASN1_INTEGER(integer, &derNext);
 
                     if(pTemplate[i].pValue == NULL) {
-                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[i].serial));
+                        pTemplate[i].ulValueLen = length;
                     }
                     else {
-                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[i].serial))) {
-                            memcpy(pTemplate[i].pValue, remsig_token.tokens[i].serial, strlen(remsig_token.tokens[i].serial));
+                        if(pTemplate[i].ulValueLen >= length) {
+                            memcpy(pTemplate[i].pValue, der, length);
                         }
                         else {
                             pTemplate[i].ulValueLen = -1;
                             err = CKR_BUFFER_TOO_SMALL;
                         }
                     }
+                    free(der);
+                    free(integer);
 
                 break;
 
                 case CKA_VALUE:
 
                     if(pTemplate[i].pValue == NULL) {
-                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[i].cert));
+                        pTemplate[i].ulValueLen = sizeof(strlen(remsig_token.tokens[slotID].cert));
                     }
                     else {
-                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[i].cert))) {
-                            memcpy(pTemplate[i].pValue, remsig_token.tokens[i].cert, strlen(remsig_token.tokens[i].cert));
+                        if(pTemplate[i].ulValueLen >= sizeof(strlen(remsig_token.tokens[slotID].cert))) {
+                            memcpy(pTemplate[i].pValue, remsig_token.tokens[slotID].cert, strlen(remsig_token.tokens[slotID].cert));
                         }
                         else {
                             pTemplate[i].ulValueLen = -1;
