@@ -66,46 +66,47 @@
 
 static struct remsig_token {
 
-  int app_error_fatal;
-  FILE* logfile;
-  int cryptoki_initialized;
+      // cryptoki general info
+      FILE* logfile;
+      int cryptoki_initialized;
 
-  int open_sessions;
-  struct session_state {
-    CK_SESSION_HANDLE session_handle;
+      int open_sessions;
+      struct session_state {
+            // general state info
+            CK_SESSION_HANDLE session_handle;
+            CK_STATE state_session; //PKCS11 state
+            CK_FLAGS flags;
+            CK_VOID_PTR application;
+            CK_NOTIFY notify;
+            CK_SLOT_ID slot;
+            CK_ATTRIBUTE_PTR templ;
+            int template_count;
+            int find_init_done;
+            int sign_init_done;
 
-        CK_STATE state_session; //PKCS11 state
-        CK_FLAGS flags;
-        CK_VOID_PTR application;
-        CK_NOTIFY notify;
+      } sessions[MAX_NUM_SESSIONS];
 
-        CK_SLOT_ID slot;
+      int num_tokens;
+      struct token_info{
+            // general token info
+            struct {
+                // token flags
+                int hardware_slot;
+                int login_user;
+                int conn_up;
+            } flags;
 
-        int find_init_done;
-        CK_ATTRIBUTE_PTR templ;
-        int template_count;
+            int sessions_open;
 
-        int sign_init_done;
+            // remsig cert info
+            char *DN;
+            char *serial;
+            char* issuer;
+            char* pin;
+            int qualified;
+            char* cert;
 
-  } sessions[MAX_NUM_SESSIONS];
-
-  int num_tokens;
-  struct token_info{
-    struct {
-    int hardware_slot;
-    int login_user;
-        int conn_up;
-    } flags;
-
-    int sessions_open;
-    char *DN;
-    char *serial;
-    char* issuer;
-    char* pin;
-    int qualified;
-    char* cert;
-
-  } tokens[MAX_NUM_TOKENS];
+      } tokens[MAX_NUM_TOKENS];
 
 } remsig_token;
 
@@ -121,7 +122,10 @@ st_logf(const char *fmt, ...)
     fflush(remsig_token.logfile);
 }
 
-static char* getToken() {
+static char*
+getToken() {
+
+    st_logf("Looking for access token.\n");
 
     char path[120] = {0};
     FILE* file = NULL;
@@ -148,7 +152,8 @@ static char* getToken() {
 
     // opens file on location specified above, read-only
     file = fopen(path, "r");
-    if (file == NULL) return NULL;
+    if (file == NULL)
+        return NULL;
 
     // gets file size
     fseek(file, 0, SEEK_END);
@@ -157,19 +162,22 @@ static char* getToken() {
 
     // allocates memory
     buffer = malloc(sizeof(char) * (length + 1));
-    memset(buffer, 0, sizeof(char) * (length + 1));
     if(buffer == NULL) {
+        st_logf("Error during memory alloc.\n");
         goto error_cleanup;
     }
 
+    memset(buffer, 0, sizeof(char) * (length + 1));
+
+
     // reads first line of the file
-    if(fgets(buffer, length, file) == NULL) {
+    if(fgets(buffer, length, file) == NULL)
         goto error_cleanup;
-    }
 
     // parses first line, looking for access token
     p = strtok(buffer, "\n");
     if( p == NULL) {
+        st_logf("Error during access token parsing.\n");
         goto error_cleanup;
     }
     else {
@@ -196,6 +204,7 @@ static char* getToken() {
 
 CK_BYTE*
 toBase64(CK_BYTE* str, int len) {
+
     BIO *bio = NULL;
     BIO *b64 = NULL;
     BUF_MEM *bufferPtr = NULL;
@@ -218,21 +227,22 @@ toBase64(CK_BYTE* str, int len) {
 
 CK_BYTE*
 decode64(CK_BYTE* input, int len) {
-  BIO *b64 = NULL;
-  BIO *bio = NULL;
 
-  CK_BYTE *buffer = malloc(len + 1);
-  memset(buffer, 0, len);
+    BIO *b64 = NULL;
+    BIO *bio = NULL;
 
-  b64 = BIO_new(BIO_f_base64());
-  bio = BIO_new_mem_buf(input, len);
-  bio = BIO_push(b64, bio);
+    CK_BYTE *buffer = malloc(len + 1);
+    memset(buffer, 0, len);
 
-  BIO_read(bio, buffer, len);
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new_mem_buf(input, len);
+    bio = BIO_push(b64, bio);
 
-  BIO_free_all(bio);
+    BIO_read(bio, buffer, len);
 
-  return buffer;
+    BIO_free_all(bio);
+
+    return buffer;
 }
 
 static void
@@ -255,8 +265,8 @@ snprintf_fill(char *str, size_t size, char fillchar, const char *fmt, ...)
  * ***************************************/
 
 struct Response {
-  char* data;
-  size_t size;
+    char* data;
+    size_t size;
 };
 
 static size_t
@@ -329,28 +339,28 @@ curl_post_with_header(const char* url, const char* d_post, const char* header) {
         goto error_cleanup;
     }
 
-#ifdef PEER_VERIFICATION
-    res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER , 1);
-    if(res != CURLE_OK) {
-        st_logf("curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
-        goto error_cleanup;
-    }
-    #ifdef _WIN32
-        res = curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
+    #ifdef PEER_VERIFICATION
+        res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER , 1);
+        if(res != CURLE_OK) {
+            st_logf("curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+            goto error_cleanup;
+        }
+        #ifdef _WIN32
+            res = curl_easy_setopt(curl, CURLOPT_CAINFO, "curl-ca-bundle.crt");
+            if(res != CURLE_OK) {
+                st_logf("curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
+                goto error_cleanup;
+            }
+        #endif
+    #endif
+
+    #ifndef PEER_VERIFICATION
+        res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER , 0);
         if(res != CURLE_OK) {
             st_logf("curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
             goto error_cleanup;
         }
     #endif
-#endif
-
-#ifndef PEER_VERIFICATION
-    res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER , 0);
-    if(res != CURLE_OK) {
-        st_logf("curl_easy_perform() failed: %s\n",curl_easy_strerror(res));
-        goto error_cleanup;
-    }
-#endif
 
     // sets post data if available
     if(d_post != NULL) {
@@ -902,17 +912,6 @@ remsig_sign(unsigned certID, char* password, CK_BYTE* data, unsigned data_len) {
  *
  * ***************************************/
 
-static void
-application_error(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    vprintf(fmt, ap);
-    va_end(ap);
-    if (remsig_token.app_error_fatal)
-    abort();
-}
-
 static CK_RV
 verify_session_handle(CK_SESSION_HANDLE hSession,
               struct session_state **state)
@@ -995,6 +994,7 @@ C_Initialize(CK_VOID_PTR a)
 
     int i;
     char path[120] = {0};
+    char* token;
 
     // sets logging
     remsig_token.logfile = NULL;
@@ -1018,10 +1018,13 @@ C_Initialize(CK_VOID_PTR a)
         return CKR_FUNCTION_FAILED;
     }
 
-    if(NULL == getToken()) {
-        st_logf("Access token not found");
+    // getting access token
+    token == getToken();
+    if(token == NULL) {
+        st_logf("Access token not found.\n");
         return CKR_FUNCTION_FAILED;
     }
+    st_logf("Access token found.\n");
 
     st_logf("Initialize.\n");
 
@@ -1181,8 +1184,8 @@ C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList)
 
 CK_RV
 C_GetSlotList(CK_BBOOL tokenPresent,
-          CK_SLOT_ID_PTR pSlotList,
-          CK_ULONG_PTR   pulCount)
+              CK_SLOT_ID_PTR pSlotList,
+              CK_ULONG_PTR   pulCount)
 {
     // obtains list of slots currently used in module
     int i, idx = 0, conn_tokens = 0;
