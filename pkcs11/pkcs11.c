@@ -169,7 +169,6 @@ getToken() {
 
     memset(buffer, 0, sizeof(char) * (length + 1));
 
-
     // reads first line of the file
     if(fgets(buffer, length, file) == NULL)
         goto error_cleanup;
