@@ -6,8 +6,7 @@ LIBS += -llibxml2 -llibeay32
 LIBS += -L$$PWD/curl/lib/ -lcurl -lcurldll
 
 SOURCES += \
-    minidriver.c \
-    notimplemented.c
+    minidriver.c
 
 HEADERS += \
     cardmod.h
