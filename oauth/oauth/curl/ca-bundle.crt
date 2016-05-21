@@ -1,0 +1,18 @@
+##
+## ca-bundle.crt -- Bundle of CA Root Certificates
+##
+## Converted at: 10.02.2016 11:46:56
+##
+## This is a bundle of X.509 certificates of public Certificate Authorities
+## (CA). These were automatically extracted from Mozilla's root certificates
+## file (certdata.txt).  This file can be found in the mozilla source tree:
+## '/mozilla/source/security/nss/lib/ckfw/builtins/certdata.txt'
+##
+## It contains the certificates in PEM format and therefore
+## can be directly used with curl / libcurl / php_curl, or with
+## an Apache+mod_ssl webserver for SSL client authentication.
+## Just configure this file as the SSLCACertificateFile.
+##
+
+GlobalSign Root CA
+==================
