@@ -23,8 +23,8 @@ unix: LIBS += -lcurl
 win32: LIBS += -L "E:\oauth_fin\curl\lib" -lcurldll -lcurl
 
 # edit path to your compliler lib folder, lwsock32 and ladvapi32 are common libraries in windows environment
-win32: LIBS += -L$$PWD/../../../../../../Qt/Tools/mingw491_32/i686-w64-mingw32/lib/ -lwsock32
-win32: LIBS += -L$$PWD/../../../../../../Qt/Tools/mingw491_32/i686-w64-mingw32/lib/ -ladvapi32
+win32: LIBS += -lwsock32 -ladvapi32
+
 
 
 

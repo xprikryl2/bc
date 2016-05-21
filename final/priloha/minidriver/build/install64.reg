@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography\Calais\SmartCards\RemSig]
+"80000001"="minidriver.dll"
+"ATR"=hex:3B,B7,94,00,81,31,FE,65,53,50,4B,32,33,90,00,D1 
+
+"ATRMask"=hex:ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff,ff 
+"Crypto Provider"="Microsoft Base Smart Card Crypto Provider"
+"Smart Card Key Storage Provider"="Microsoft Smart Card Key Storage Provider"
