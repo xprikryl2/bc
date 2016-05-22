@@ -34,6 +34,7 @@ typedef struct token{
     unsigned certID;
 
     // remsig info
+    int remsig_identifier;
     int qualified;
     char* serial;
     char* pin;
@@ -360,7 +361,8 @@ set_token(remsig_token* card_context, const char *xml)
     // setting local tokens
     for (xmlNode *cur_node = root_element->children; cur_node; cur_node = cur_node->next) {
         if ((cur_node->type == XML_ELEMENT_NODE)&&(strcmp((char*)cur_node->name, "certificate") == 0)) {
-            if(i == 0) {
+            i++;
+            if(i == card_context->remsig_identifier) {
                 card_context->certID = i;
                 card_context->DN = strdup((char*)cur_node->children->children->content);
                 card_context->issuer = strdup((char*)cur_node->children->next->children->content);
@@ -2385,6 +2387,13 @@ CardAcquireContext(
     vendor = malloc(sizeof(remsig_token));
     pCardData->pvVendorSpecific = vendor;
     vendor->state = 0;
+
+    // cardName is given in specific form - RemSig [certificate id]
+    // examples... RemSig 1, RemSig 22, RemSig 15
+    vendor->remsig_identifier = _wtoi(pCardData->pwszCardName);
+    if(vendor->remsig_identifier < 1)
+        return SCARD_E_UNEXPECTED;
+
     load_token(vendor);
     // checks loading status, 1 is OK, otherwise 0
     if(vendor->state != 1)
