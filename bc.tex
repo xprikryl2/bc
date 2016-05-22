@@ -72,15 +72,15 @@ Ověřování podpisu probíhá analogicky:
  	\caption{Principy digitálního podpisu.}
   	\label{fig:Digitální podpis.}
 \end{figure}
-Pokud si haše odpovídají, pak je jisté, že přijatý dokument je shodný s\,odeslaným a je tedy zaručena integrita. Aby byla zajištěna nepopiratelnost a autenticita, je nutné ověřit, že daný klíč opravdu patří osobě, která poslala podepsaný dokument. Procesu, který toto zajišťuje, se\,říká \textit{přenos důvěry}.
+Pokud si haše odpovídají, pak je jisté, že přijatý dokument je shodný s\,odeslaným a je tedy zaručena integrita. Aby byla zajištěna nepopiratelnost a autenticita, je nutné ověřit, že daný klíč opravdu patří osobě, která poslala podepsaný dokument. Procesu, který toto zajišťuje, se\,říká \textit{přenos důvěry}. 
 
 \section{Přenos důvěry}
 Aby bylo možné pomocí digitálního podpisu dosáhnout autenticity a\,nepopiratelnosti, je veřejný klíč dané osoby podepsán důvěryhodnou certifikační autoritou. Tímto způsobem je vyjádřeno, že certifikační autorita věří, že majitel veřejného klíče je skutečně ten, za koho se vydává. Uživatel musí certifikační autoritě prokázat svoji totožnost předtím, než získá certifikát.
-Další možností k dosažení autenticity je tzv. \textit{síť důvěry}. Jedná se o decentralizovanou alternativu k centralizovanému modelu certifikačních autorit. 
+Další možností k dosažení autenticity je tzv. \textit{síť důvěry}. Jedná se o decentralizovanou alternativu k centralizovanému modelu certifikačních autorit. [1]
 
 \chapter{RemSig}
 
-Systém RemSig je bezpečné vzdálené úložiště certifikátů a privátních klíčů, které uživatelům poskytuje možnost podepisovat dokumenty bez nutnosti neustálého fyzického přístupu k zařízení, na němž je certifikát uložen. Díky tomu odpadá uživatelům systému RemSig povinnost nosit s sebou hardwarové zařízení, což zvyšuje uživatelskou přívětivost i funkcionalitu. Uživatelé totiž mohou podepisovat dokumenty, i když u sebe právě nemají kryptografické zařízení, nebo když jsou na jiném počítači, který není nakonfigurovaný pro práci s\,digitálními podpisy nebo není důvěryhodný.
+Systém RemSig je bezpečné vzdálené úložiště certifikátů a privátních klíčů, které uživatelům poskytuje možnost podepisovat dokumenty bez nutnosti neustálého fyzického přístupu k zařízení, na němž je certifikát uložen. Díky tomu odpadá uživatelům systému RemSig povinnost nosit s sebou hardwarové zařízení, což zvyšuje uživatelskou přívětivost i funkcionalitu. Uživatelé totiž mohou podepisovat dokumenty, i když u sebe právě nemají kryptografické zařízení, nebo když jsou na jiném počítači, který není nakonfigurovaný pro práci s\,digitálními podpisy nebo není důvěryhodný. [2]
 
 	\section{Aktuální využití}
 
@@ -132,7 +132,7 @@ Systém RemSig je bezpečné vzdálené úložiště certifikátů a privátníc
 		\item \textit{changePassword} - změní heslo, kterým je chráněn soukromý klíč
 		\item \textit{changeCertificateStatus} - změní status certifikátu
 		\item \textit{listCertificates} - vypíše všechny certifikáty uložené v systému RemSig
-		\item \textit{checkPassword} - zjistí, zda-li poskytnuté heslo skutečně slouží pro 					odemknutí privátního klíče
+		\item \textit{checkPassword} - zjistí, zda-li poskytnuté heslo skutečně slouží pro 					odemknutí soukromého klíče
 	\end{itemize}
 
 	\section{Funkcionalita}
@@ -233,7 +233,7 @@ OAuth 2.0 (RFC 6749) je autorizační protokol (resp. framework), který umožň
 		Kompromitace aplikace třetí strany znamená ohrožení přihlašovacích údajů 						uživatele a všech souborů na nich závislých.
 		\end{itemize}
 
-	OAuth tyto problémy řeší zavedením autorizační vrstvy a oddělením rolí klienta 					(aplikace) a vlastníka chráněného zdroje. V protokolu aplikace zažádá o přístup ke 				chráněnému obsahu  a jsou jí přiděleny přihlašovací údaje (přístupový token) odlišné od 			přihlašovacích údajů uživatele. 
+	OAuth tyto problémy řeší zavedením autorizační vrstvy a oddělením rolí klienta 					(aplikace) a vlastníka chráněného zdroje. V protokolu aplikace zažádá o přístup ke 				chráněnému obsahu  a jsou jí přiděleny přihlašovací údaje (přístupový token) odlišné od 			přihlašovacích údajů uživatele. [3]
 
 	\section{Role}
 		OAuth 2.0 definuje 4 typy rolí:
@@ -252,7 +252,7 @@ OAuth 2.0 (RFC 6749) je autorizační protokol (resp. framework), který umožň
  		\newline
 		Server, který vydává klientovi přístupový token po úspěšné autentizaci oprávněné osoby.
 		\end{itemize}
-		Protokol nijak nespecifikuje interakci mezi autorizačním serverem a\,serverem zdrojů. 				Může se jednat o nezávislé entity, ale i o jeden server.
+		Protokol nijak nespecifikuje interakci mezi autorizačním serverem a\,serverem zdrojů. 				Může se jednat o nezávislé entity, ale i o jeden server. [4]
 
 	\section{Přístupový token}	
 
@@ -264,12 +264,12 @@ OAuth 2.0 (RFC 6749) je autorizační protokol (resp. framework), který umožň
 
 	\section{Průběh protokolu}
 
-	OAuth definuje několik základních způsobů autorizace vedoucích k\,získání přístupového 			tokenu. Patří mezi ně:
+	OAuth definuje několik základních způsobů autentizace vedoucích k\,získání přístupového 			tokenu. Patří mezi ně:
 
 		\begin{itemize}
  		\item Autorizačním kódem:
   		\newline
-		Jedná se o doporučený průběh, ke kterému je zapotřebí uživatelský agent 						(prohlížeč). Klient s použitím prohlížeče přesměruje uživatele na přihlašovací stránku. Po 			úspěšné autentizaci zašle autorizační server klientovi autorizační kód. Klient pro získání 			přístupového tokenu zašle autorizační kód autorizačnímu serveru.
+		Jedná se o doporučený průběh, ke kterému je zapotřebí internetový prohlížeč. Klient s použitím prohlížeče přesměruje uživatele na přihlašovací stránku. Po 			úspěšné autentizaci zašle autorizační server klientovi autorizační kód. Klient pro získání 			přístupového tokenu zašle autorizační kód autorizačnímu serveru.
   		\item Implicitně:
   		\newline
 		Tento typ je zjednodušením průběhu autorizace autorizačním kódem. Slouží pro aplikace 			běžící v prohlížeči, které používají skriptovací jazyky jako je například JavaScript. Na rozdíl 		od předchozího typu, klient získá přístupový token přímo po přihlášení. Tento typ je 				rychlejší,	jelikož redukuje počet výzev a\,odpovědí, které je potřeba udělat pro získání 				tokenu.
@@ -305,7 +305,7 @@ OAuth 2.0 (RFC 6749) je autorizační protokol (resp. framework), který umožň
 
 S nástupem kryptografie přišla nutnost zavést jednotné protokoly a\,postupy pro zajištění kompatibility koncových aplikací. Ačkoliv se vývojáři shodli na základních kryptografických postupech, kompatibilita mezi jednotlivými implementacemi nebyla nikdy zaručena. Jednotný standard byl tedy nutností. Tuto potřebu naplnila organizace RSA Laboritories zavedením jednotného standardu Public-Key Cryptography Standards, zkráceně PKCS. Jedná se o celou rodinu standardů, mezi které patří například i PKCS\#11, který je využit v\,implementaci knihoven RemSig.
 
-PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro kryptografické tokeny, nazývané Cryptoki podle Cryptographic Token Interface. PKCS\#11 je nyní ve verzi 2.20 a to již od roku 2004. S ohledem na stáří protokolu probíhá od roku 2009 testování nové verze protokolu s označením 2.30, který však ještě nebyl standardizován.
+PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro kryptografické tokeny, nazývané Cryptoki podle Cryptographic Token Interface. PKCS\#11 je nyní ve verzi 2.20 a to již od roku 2004. S ohledem na stáří protokolu probíhá od roku 2009 testování nové verze protokolu s označením 2.30, který však ještě nebyl standardizován. [5]
 
 	\section{Cíle návrhu}
 
@@ -330,9 +330,9 @@ PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro
 
 	Cryptoki je tedy rozhraní mezi vyšší vrstvou uživatelských aplikací a nižší hardwarovou 			vrstvou, která vykonává kryptografické operace. Jak bylo popsáno výše, tato hardwarová 			vrstva může být reprezentována kartami, tokeny nebo dokonce vzdálenými síťovými službami.
 
-	Díky tomu, že Cryptoki maskuje skutečnou hardwarovou podobu připojeného zařízení a 			zobrazuje je jako totožné jednotky, volající aplikace nemusí znát přesné rozhraní ke kterému je 		zařízení připojeno či jaký ovladač pro ně použít.
+	Díky tomu, že Cryptoki maskuje skutečnou hardwarovou podobu připojeného zařízení a 			zobrazuje je jako totožné jednotky, volající aplikace nemusí znát přesné rozhraní, ke kterému je 		zařízení připojeno, či jaký ovladač pro ně použít.
 
-	Je nutné podotknout, že Cryptoki nepředpisuje, aby všechny jeho funkce byli implementovány. 		Standard však definuje, které funkce implementovány být musí, aby modul poskytoval nějakou 		funkcionalitu. Díky této vlastnosti se začali objevovat tzv. \textit{profily} PKCS\#11.
+	Je nutné podotknout, že Cryptoki nepředpisuje, aby všechny jeho funkce byli implementovány. 		Standard však definuje, které funkce implementovány být musí, aby modul poskytoval nějakou 		funkcionalitu. Díky této vlastnosti se začali objevovat tzv. \textit{profily} PKCS\#11. [7]
 
 		\subsection{Objekty}
 
@@ -365,7 +365,7 @@ PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro
 		Oba vykonávají v systému různé úlohy, ale standard nedefinuje jejich vzájemný vztah. Je 			tedy v pořádku, když je stejná osoba normálním uživatelem i SO.
 
 		Účelem SO je inicializovat token a nastavit normálnímu uživateli PIN nebo jinou formu 				autentizace. SO, na rozdíl od normálního uživatele, dokáže přistoupit pouze k veřejným 			objektům.
-		Normální uživatel je jediný kdo může přistupovat k soukromým objektům, ale až poté co	
+		Normální uživatel je jediný, kdo může přistupovat k soukromým objektům, ale až poté co	
 		se úspěšně autentizuje. 
 
 		\subsection{Relace}
@@ -427,16 +427,16 @@ PKCS\#11 je platformově nezávislé aplikační programové rozhraní (API) pro
 		
 \chapter{CryptoAPI}
 
-Microsoft CryptoAPI je aplikační programové rozhraní (též nazývané CAPI) dostupné v operačních systémech Microsoft Windows. Jedná se o skupinu knihoven, které implementují kryptografické mechanismy. CryptoAPI se poprvé objevilo v operačním systému Windows NT 4.0 a v dalších verzích OS bylo postupně zdokonalováno. API podporuje jak symetrickou tak i asymetrickou kryptografii a poskytuje řadu užitečných kryptografických funkcí jako například kryptograficky bezpečný generátor pseudonáhodných čísel. 
+Microsoft CryptoAPI je aplikační programové rozhraní (též nazývané CAPI) dostupné v operačních systémech Microsoft Windows. Jedná se o skupinu knihoven, které implementují kryptografické mechanismy. CryptoAPI se poprvé objevilo v operačním systému Windows NT 4.0 a v dalších verzích OS bylo postupně zdokonalováno. API podporuje jak symetrickou, tak i asymetrickou kryptografii a poskytuje řadu užitečných kryptografických funkcí jako například kryptograficky bezpečný generátor pseudonáhodných čísel. [9]
 
-S operačním systémem Windows Vista však přišel nový model s\,názvem Cryptography API: Next Generation (zkráceně CNG). Předpokládá se, že tento model v dlouhodobém časovém horizontu nahradí CryptoAPI. CNG rozšiřuje původní implementaci o nové algoritmy a\,funkce. V\,novém modelu například přibyla kryptografie využívající eliptických křivek, která nabízí stejnou úroveň zabezpečení při použití kratšího klíče, což ji činí efektivnější než algoritmus RSA. V\,modelu přibyli také nová knihovna BaseCSP a Smart Card minidriver, které usnadňují výrobcům čipových karet integraci funkcionality jejich karet do operačního systému Windows.
+S operačním systémem Windows Vista však přišel nový model s\,názvem Cryptography API: Next Generation (zkráceně CNG). Předpokládá se, že tento model v dlouhodobém časovém horizontu nahradí CryptoAPI. CNG rozšiřuje původní implementaci o nové algoritmy a\,funkce. V\,novém modelu přibyla kryptografie využívající eliptických křivek, která nabízí stejnou úroveň zabezpečení při použití kratšího klíče, což ji činí efektivnější než algoritmus RSA. V\,modelu přibyli také knihovna BaseCSP a Smart Card Minidriver, které usnadňují výrobcům čipových karet integraci funkcionality jejich karet do operačního systému Windows. [10]
 
 	\section{CSP}
 	
-	Výrobci mohou použít funkcionalitu kryptografických rozhraní implementováním speciálního 			modulu. Tyto moduly se nazývají Cryptographic Service Providers (zkráceně CSP). Jedná se o 		\textit{.dll} soubory, které jsou určeny k práci s kryptografickými funkcemi. CSP může 				implementovat veškerou funkcionalitu definovanou kryptografickými rozhraními od symetrické 		kryptografie po práci s klíči a úložištěm certifikátů systému Windows.
+	Výrobci mohou použít funkcionalitu kryptografických rozhraní implementováním speciálního 			modulu. Tyto moduly se nazývají Cryptographic Service Providers (zkráceně CSP). Jedná se o 		knihovny, které jsou určeny k práci s kryptografickými funkcemi. CSP může 				implementovat veškerou funkcionalitu definovanou kryptografickými rozhraními od symetrické 		kryptografie po práci s klíči a úložištěm certifikátů systému Windows. [11]
 
 	\section{BaseCSP}
-	S příchodem nového kryptografického modelu Cryptography API: Next Generation přibyla také 		nová knihovna s názvem BaseCSP. Tato knihovna usnadňuje výrobcům čipových karet integraci 		funkcionality jejich karet do operačního systému Windows. Tím pádem již není potřeba budovat 		celé řešení skrze CSP, ale implementovat pouze menší část pomocí \textit{Smart Card 			Minidriveru}. Samotné BaseCSP poskytuje minidriveru rozsáhlou funkcionalitu, stará se o práci s 		certifikáty v úložišti certifikátů operačního systému Windows (anglicky označován jako 				\textit{CertStore}), umožňuje hašování dat pomocí mnoha dostupných hašovacích algoritmů a 		další.
+	S příchodem nového kryptografického modelu Cryptography API: Next Generation přibyla také 		nová knihovna s názvem BaseCSP. Tato knihovna usnadňuje výrobcům čipových karet integraci 		funkcionality jejich karet do operačního systému Windows. Tím pádem již není potřeba budovat 		celé řešení skrze CSP, ale implementovat pouze menší část pomocí \textit{Smart Card 			Minidriveru}. Samotné BaseCSP poskytuje minidriveru rozsáhlou funkcionalitu, stará se o práci s 		certifikáty v úložišti certifikátů operačního systému Windows (anglicky označován jako 				\textit{CertStore}), umožňuje hašování dat pomocí mnoha dostupných hašovacích algoritmů a 		další. [12]
 
 	\section{CNG KSP}
 	Na rozdíl od CryptoAPI, Cryptography API: Next Generation rozděluje CSP na 2 základní prvky a 	to:
@@ -447,11 +447,11 @@ S operačním systémem Windows Vista však přišel nový model s\,názvem Cryp
 	KSP je používán pro veškerou práci s úložištěm klíčů, zároveň však obsahuje i základní 				algoritmy pro hašování a podepisování dat.
 
 	\section{Smart Card Minidriver}
-	Smart card minidriver představuje alternativní cestu budování kryptografického modulu na rozdíl od implementace celého CSP. Jelikož používá funkce již dostupných BaseCSP nebo KSP, jeho 			implementace je velmi jednodušší a efektivnější. BaseCSP/KSP se stará o veškeré dění v rámci 		úložiště certifikátů, nabízí mnoho hašovacích funkcí a\,další.  \newline
+	Smart Card Minidriver představuje alternativní cestu budování kryptografického modulu na rozdíl od implementace celého CSP. Jelikož používá funkce již dostupných BaseCSP nebo KSP, jeho 			implementace je velmi jednodušší a efektivnější. BaseCSP/KSP se stará o veškeré dění v rámci 		úložiště certifikátů, nabízí mnoho hašovacích funkcí a\,další.  \newline
 
 	Minidriver je dostupný od operačního systému Windows Vista. V průběhu vývoje minidriveru byla		přidávána nová funkcionalita, knihovna má nyní verzi 7.07, s posledními aktualizacemi k datu 		25. února 2016. Starší nebo neaktualizované operační systémy mohou mít nižší verzi, avšak 		pro splnění základní funkcionality musí být podporována alespoň verze 4. \newline
 
-	Na následujícím obrázku je uveden obecný model celého systému. Minidriver je zobrazen jako 		jedna ze tří alternativ implementace modulu pro práci s kryptografickými zařízeními. 
+	Na následujícím obrázku je uveden obecný model celého systému. Minidriver je zobrazen jako 		jedna ze tří alternativ implementace modulu pro práci s kryptografickými zařízeními.  [13]
 
 		\begin{figure}[!ht]
   			\begin{minipage}{1.00\textwidth}
@@ -517,7 +517,7 @@ S operačním systémem Windows Vista však přišel nový model s\,názvem Cryp
 
 \chapter{Praktická část}
 
-Praktická část se věnuje popisu implementovaných knihoven a protokolu OAuth 2.0. Jsou zde také zahrnuty postřehy, pro vylepšení systému RemSig. 
+Praktická část se věnuje popisu implementovaných knihoven a protokolu OAuth 2.0. Jsou zde také zahrnuty postřehy k vylepšení systému RemSig. Při implementaci knihoven jsem čerpal inspiraci z prací \textit{Vzdialené PKCS\#11 úložisko} [6] a projektu \textit{OpenSC} [8].
 
 	\section{OAuth 2.0}
 
@@ -569,7 +569,7 @@ Praktická část se věnuje popisu implementovaných knihoven a protokolu OAuth
 	
 	V druhé části praktické práce jsem implementovat PKCS\#11 modul, který slouží k propojení 		systému RemSig a aplikací, které modul PKCS\#11 podporují. Mezi tyto aplikace patří například 	Mozilla Firefox, Safari, Mozilla Thunderbird, Evolution a mnoho dalších
 \footnote{Seznam podporovaných aplikací: \url{https://github.com/OpenSC/OpenSC/wiki/Using-smart-cards-with-applications}.}. 
-	Standard PKCS\#11 nepředpisuje, aby všechny jeho funkce byly implementovány, avšak 			definuje, které funkce by měli být implementovány, aby modul poskytoval nějakou funkcionalitu. S ohledem 	na systém RemSig byl vytvořen profil PKCS\#11, který umožňuje práci s digitálním podpisem. 		Virtuální zařízení - token, je zobrazováno jako zařízení pouze pro čtení a tím pádem všechny 		funkce, které vytvářejí, upravují nebo mažou objekty, nejsou podporovány. Každý aktivní token je 	již inicializován a uživatel má nastavené přihlašovací heslo. Aktivní token zároveň obsahuje 			právě jeden certifikát a jeden privátní klíč, k danému certifikátu.
+	Standard PKCS\#11 nepředpisuje, aby všechny jeho funkce byly implementovány, avšak 			definuje, které funkce by měli být implementovány, aby modul poskytoval nějakou funkcionalitu. S ohledem 	na systém RemSig byl vytvořen profil PKCS\#11, který umožňuje práci s digitálním podpisem. 		Virtuální zařízení - token, je zobrazováno jako zařízení pouze pro čtení a tím pádem všechny 		funkce, které vytvářejí, upravují nebo mažou objekty, nejsou podporovány. Každý aktivní token je 	již inicializován a uživatel má nastavené přihlašovací heslo. Aktivní token zároveň obsahuje 			právě jeden certifikát a jeden soukromý klíč.
 
 	\subsection{Obecné funkce} 
 	\textit{C\_Initialize} - inicializuje celý modul a vytvoří kontext klientské strany, který slouží k 		uchovávání informací o modulu. Tato funkce dále nastavuje logování a získává certifikáty z 			úložiště RemSig. Ke každému certifikátu obdrženému metodou \textit{listMyCertificates} je 			vytvořen virtuální token, který je posléze připojen do virtuálního slotu. 
@@ -664,7 +664,7 @@ Praktická část se věnuje popisu implementovaných knihoven a protokolu OAuth
 	Ve třetí části praktické práce jsem implementoval Smart card minidriver, který slouží k propojení 	systému RemSig a úložiště certifikátů operačního systému Windows. Vytvořený minidriver 			podporuje načtení jak pod Smart Card BaseCSP, tak i pod CNG Key Service Provider. Každý 		certifikát v systému RemSig je zobrazován jako samostatný token, který má vlastnost pouze 		pro čtení. Dokumentace minidriveru přesně specifikuje, které funkce musí být implementovány, 		jestliže je token pouze pro čtení.
 
 		\subsection{Obecné funkce}
-		\textit{CardAcquireContext} - inicializuje komunikaci mezi BaseCSP/KSP a minidriverem. 			BaseCSP/KSP předá minidriveru strukturu obsahující informace o kartě (jméno, ATR), o 				požadované verzi knihovny a\,o\,funkcích, které slouží pro práci s daty (alokace paměti, 			uvolnění paměti, cache). Jestliže je karta minidriverem rozpoznána, funkce vytvoří 				kontext karty a pomocí metody \textit{listMyCertificates} získá certifikát ze systému 				RemSig a uloží si jej do kontextu. V poslední řadě funkce přidá do struktury tabulku funkcí, 			které minidriver implementuje. Minimální podporovaná verze minidriveru je verze 4.
+		\textit{CardAcquireContext} - inicializuje komunikaci mezi BaseCSP/KSP a minidriverem. 			BaseCSP/KSP předá minidriveru strukturu obsahující informace o kartě (jméno, ATR), o 				požadované verzi knihovny a\,o\,funkcích, které slouží pro práci s daty (alokace paměti, 			uvolnění paměti, cache). Jestliže je karta minidriverem rozpoznána, funkce vytvoří 				kontext karty a pomocí metody \textit{listMyCertificates} získá certifikát ze systému 				RemSig a uloží si jej do kontextu. Nakonec funkce přidá do struktury tabulku funkcí, 			které minidriver implementuje. Minimální podporovaná verze minidriveru je verze 4.
 		\newline
  		\newline
 		\textit{CardQueryCapabilities} - získá přehled možností karty. V aktuální verzi jsou 				definovány pouze 2 vlastnosti - možnost karty generovat klíče, kterou karta pouze pro 			čtení nedisponuje, a zda-li karta provádí vlastní kompresi dat (není nutná komprese v 				baseCSP/KSP). Nastavením této hodnoty na pravda zamezíme kompresi souborů zvenčí.
@@ -716,7 +716,7 @@ Praktická část se věnuje popisu implementovaných knihoven a protokolu OAuth
 
 	\section{Virtualizace zařízení v operačním systému Windows}
 	
-	Proces objevení karty je nedílnou součástí práce s kryptografickými zařízeními v operačním 			systému Windows, který nenabízí tak vysokou úroveň abstrakce jako PKCS\#11 modul. Na 		samém dnu modelu se nachází knihovna Winscard.dll, která slouží k přiřazení karty k\,odpovídajícímu minidriveru. Po připojení karty je získán jednoznačný identifikátor karty (nazýván 		ATR), který se operační systém pokusí vyhledat v systémovém registru, v němž jsou uloženy 		záznamy o kryptografických zařízeních, jejich identifikátorech a příslušných cestách\,k 				odpovídajícím minidriverům.
+	Proces objevení karty je nedílnou součástí práce s kryptografickými zařízeními v operačním 			systému Windows, který nenabízí tak vysokou úroveň abstrakce jako PKCS\#11 modul. Na 		samém dnu modelu se nachází knihovna \textit{Winscard.dll}, která slouží k přiřazení karty k\,odpovídajícímu minidriveru. Po připojení karty je získán jednoznačný identifikátor karty (nazýván 		ATR), který se operační systém pokusí vyhledat v systémovém registru, v němž jsou uloženy 		záznamy o kryptografických zařízeních, jejich identifikátorech a příslušných cestách\,k 				odpovídajícím minidriverům.
 
 	Jelikož se v návrhu žádné fyzické zařízení nevyskytuje, je zapotřebí vytvořit ovladač k virtuální 		čtečce karet a simulovat vložení karty do systému, což vyvolá signál ke spuštění minidriveru. Při 	hledání této problematiky jsem našel spoustu komerčních modelů, které využívají výše 			popsaný princip simulace vložení karty, ovšem žádný volně šířitelný aktuální model. Díky 			nemožnosti virtualizace karty nebyl implementovaný minidriver nijak testován a jedná se pouze 		o\,prototyp.
 
@@ -746,8 +746,7 @@ Cílem bakalářské práce bylo popsat systém RemSig a představit moduly, kte
 {\flushleft
 \begin{itemize}
 	
-	\item[$\mbox{[1]}$] Adams, C., Lloyd, S. \textit{Understanding public-key infrastructure:
-concepts, standards, and deployment considerations}. Indianapolis: New Riders Publishing, 1999, 296 p. ISBN 157870166X.
+	\item[$\mbox{[1]}$] Katz, J. \textit{Digital Signatures}. New York: Springer US, 2010, 192 p. ISBN 0387277110.
 
 	\item[$\mbox{[2]}$] Vigašová, S. \textit{Client Tools for RemSig} [online]. Brno: Masarykova univerzita, 2015 [cit. 20. 5. 2016]. 48 s. Dostupné na: \url{https://is.muni.cz/auth/th/409781/fi_b/vigasova_bp.pdf}
 
@@ -777,7 +776,19 @@ concepts, standards, and deployment considerations}. Indianapolis: New Riders Pu
 
 
 \appendix %% Start the appendices.
-\chapter{Appendix - použití}
+\chapter{Přílohy}
+
+	\begin{itemize}
+		\item bp.pdf - elektronická verze práce ve formátu pdf
+
+		\item oauth - složka obsahující zdrojové kódy protokolu OAuth 2.0 a spustitelné binárky
+
+		\item pkcs11 - složka obsahující implementaci PKCS\#11 modulu, testovacího souboru a  			knihovny ve formě \textit{.so} souboru
+
+		\item minidriver - složka obsahující implementaci Smart Card Minidriveru
+	\end{itemize}
+
+\chapter{Použití PKCS\#11 modulu}
 	OAuth 2.0: \newline
 	Před načtením PKCS\#11 modulu je zapotřebí získat přístupový token k systému Remsig. Aplikace OAuth vytvoří složku, do které po úspěšné autentizaci uloží tyto přistopové údaje. Jestliže není soubor, či složka k dispozici, anebo není přístupový token platný, PKCS\#11 modul se nepodaří načíst.
 	\newline

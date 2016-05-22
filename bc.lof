@@ -1,0 +1,27 @@
+\select@language {czech}
+\addvspace {4\p@ }
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Principy digit\IeC {\'a}ln\IeC {\'\i }ho podpisu.}}{4}{figure.2.1}
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces RemSig - Autentizace pomoc\IeC {\'\i } klienta.}}{6}{figure.3.1}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Uk\IeC {\'a}zka XML po\IeC {\v z}adavku metody \textit {listCertificates}.}}{8}{figure.3.2}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Uk\IeC {\'a}zka XML odpov\IeC {\v e}di metody \textit {listCertificates}.}}{8}{figure.3.3}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Profil \IeC {\v c}esk\IeC {\'e} po\IeC {\v s}ty.}}{10}{figure.3.4}
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Google OAuth - registrace klienta.}}{14}{figure.4.1}
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces PKCS11 - Obecn\IeC {\'y} model.}}{16}{figure.5.1}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces PKCS11 - Objekty.}}{17}{figure.5.2}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces PKCS11 - Stavy R/O relac\IeC {\'\i }.}}{19}{figure.5.3}
+\contentsline {figure}{\numberline {5.4}{\ignorespaces PKCS11 - Stavy R/W relac\IeC {\'\i }.}}{20}{figure.5.4}
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Role minidriveru v syst\IeC {\'e}mu.}}{23}{figure.6.1}
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Souborov\IeC {\'y} syst\IeC {\'e}m minidriveru.}}{24}{figure.6.2}
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Registra\IeC {\v c}n\IeC {\'\i } soubor minidriveru.}}{25}{figure.6.3}
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {7.1}{\ignorespaces OAuth 2.0 - Autorizace autoriza\IeC {\v c}n\IeC {\'\i }m k\IeC {\'o}dem.}}{26}{figure.7.1}
+\addvspace {4\p@ }
+\addvspace {4\p@ }
+\addvspace {4\p@ }
+\addvspace {4\p@ }
+\contentsline {figure}{\numberline {B.1}{\ignorespaces RemSig PKCS11 modul.}}{41}{figure.B.1}

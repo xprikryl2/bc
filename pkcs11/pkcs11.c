@@ -2163,7 +2163,7 @@ C_Sign(CK_SESSION_HANDLE hSession,
     ID = state->slot;
 
     // performs sign operation
-    buf = (char*) remsig_sign(ID, remsig_token.tokens[ID].pin, pData, ulDataLen);
+    buf = (char*) remsig_sign(ID + 1, remsig_token.tokens[ID].pin, pData, ulDataLen);
 
     if (pSignature != NULL_PTR && buf != NULL) {
         if(*pulSignatureLen < strlen(buf))
